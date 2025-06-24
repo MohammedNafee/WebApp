@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebApp.Filters;
+using WebApp.Data;
+using WebApp.Filters.ActionFilters;
+using WebApp.Filters.ExceptionFilters;
 using WebApp.Models;
-using WebApp.Models.Repositories;
 
 namespace WebApp.Controllers
 {
@@ -9,49 +10,66 @@ namespace WebApp.Controllers
     [Route("api/[controller]")]
     public class ShirtsController : ControllerBase
     {
+        private readonly ApplicationDBContext db;
+
+        public ShirtsController(ApplicationDBContext db)
+        {
+            this.db = db;
+        }
 
         [HttpGet]
         public IActionResult GetShirts()
         {
-            return Ok(ShirtRepository.GetAllShirts());
+            return Ok(db.Shirts.ToList());
         }
 
         [HttpGet("{id}")]
-        [Shirt_ValidateShirtIdFilter]
+        [TypeFilter(typeof(Shirt_ValidateShirtIdFilterAttribute))]
         public IActionResult GetShirtsById(int id)
         {
-            return Ok(ShirtRepository.GetShirtById(id));
+            return Ok(HttpContext.Items["shirt"]);
         }
 
         [HttpPost]
+        [TypeFilter(typeof(Shirt_ValidateCreatedShirtFilterAttribute))]
         public IActionResult CreateShirt([FromBody] Shirt shirt)
-        {
-            return Ok("Creating a new shirt with id: {shirt.ShirtId}, Brand: {shirt.Brand} ");
+        { 
+            db.Shirts.Add(shirt);
+            db.SaveChanges();
+
+            return Created();
         } 
         
         [HttpPut("{id}")]
-        [Shirt_ValidateShirtIdFilter]
-        public IActionResult UpdateShirt(int id, [FromQuery] string Color)
+        [TypeFilter(typeof(Shirt_HandleUpdateExceptionsFilterAttribute))]
+        [Shirt_ValidateUpdateShirtFilter]
+        [TypeFilter(typeof(Shirt_ValidateShirtIdFilterAttribute))]
+        public IActionResult UpdateShirt(int id, [FromBody] Shirt shirt)
         {
+            var shirtToUpdate = HttpContext.Items["shirt"] as Shirt;
 
-            if (String.IsNullOrWhiteSpace(Color))
-                return BadRequest("Color cannot be null or empty.");
+            shirtToUpdate.Brand = shirt.Brand;
+            shirtToUpdate.Color = shirt.Color;
+            shirtToUpdate.Size = shirt.Size;
+            shirtToUpdate.Gender = shirt.Gender;
+            shirtToUpdate.Price = shirt.Price;
 
-            var shirt = ShirtRepository.GetShirtById(id);   
+            db.SaveChanges();
 
-            if (shirt != null)
-            {
-                shirt.Color = Color;
-                return Ok($"Updating shirt with id: {id}, New Color: {shirt.Color}");
-            }
-            
-            return BadRequest("Shirt not found.");
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
+        [TypeFilter(typeof(Shirt_ValidateShirtIdFilterAttribute))]
         public IActionResult DeleteShirt(int id)
         {
-            return Ok("Deleting shirt with id: {id}");
+            var shirtToDelete = HttpContext.Items["shirt"] as Shirt;
+
+            db.Shirts.Remove(shirtToDelete);   
+
+            db.SaveChanges();
+
+            return Ok(shirtToDelete);
         }
 
     }

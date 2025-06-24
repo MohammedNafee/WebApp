@@ -1,11 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using WebApp.Models.Repositories;
+using WebApp.Data;
 
-namespace WebApp.Filters
+namespace WebApp.Filters.ActionFilters
 {
     public class Shirt_ValidateShirtIdFilterAttribute : ActionFilterAttribute
     {
+        private readonly ApplicationDBContext db;
+
+        public Shirt_ValidateShirtIdFilterAttribute(ApplicationDBContext db)
+        {
+            this.db = db;
+        }
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
@@ -27,18 +33,27 @@ namespace WebApp.Filters
 
                     context.Result = new BadRequestObjectResult(problemDetails);
                 }
-                else if (!ShirtRepository.ShirtExists(shirtId.Value))
+                else
                 {
-                    var problemDetails = new ProblemDetails()
-                    {
-                        Title = "Shirt Not Found",
-                        Detail = $"No shirt found with id {shirtId.Value}.",
-                        Status = StatusCodes.Status404NotFound
-                    };
-                    
-                    context.ModelState.AddModelError("shirtId", problemDetails.Detail);
+                    var shirt = db.Shirts.Find(shirtId.Value);
 
-                    context.Result = new NotFoundObjectResult(problemDetails);
+                    if (shirt == null)
+                    {
+                        var problemDetails = new ProblemDetails()
+                        {
+                            Title = "Shirt Not Found",
+                            Detail = $"No shirt found with id {shirtId.Value}.",
+                            Status = StatusCodes.Status404NotFound
+                        };
+
+                        context.ModelState.AddModelError("shirtId", problemDetails.Detail);
+
+                        context.Result = new NotFoundObjectResult(problemDetails);
+                    }
+                    else
+                    {
+                        context.HttpContext.Items["shirt"] = shirt;
+                    }
                 }
             }
         }
