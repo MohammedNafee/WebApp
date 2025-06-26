@@ -1,11 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using WebApp.Data;
 using WebApp.Models.Repositories;
 
 namespace WebApp.Filters.ExceptionFilters
 {
     public class Shirt_HandleUpdateExceptionsFilterAttribute : ExceptionFilterAttribute
     {
+        private readonly ApplicationDBContext db;
+
+        public Shirt_HandleUpdateExceptionsFilterAttribute(ApplicationDBContext db)
+        {
+            this.db = db;
+        }
         public override void OnException(ExceptionContext context)
         {
             base.OnException(context);
@@ -14,7 +21,7 @@ namespace WebApp.Filters.ExceptionFilters
 
             if (int.TryParse(strShirtId, out int shirtId))
             {
-                if (!ShirtRepository.ShirtExists(shirtId))
+                if (db.Shirts.FirstOrDefault(s => s.ShirtId == shirtId) == null)
                 {
                     var problemDetails = new ProblemDetails()
                     {

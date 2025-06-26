@@ -55,12 +55,12 @@ namespace WebApp.Models.Repositories
 
         public static void UpdateShirt(Shirt shirt)
         {
-            var existingShirt = shirts.First(s => s.ShirtId == shirt.ShirtId);
+            var shirtToUpdate = shirts.First(s => s.ShirtId == shirt.ShirtId);
 
-            existingShirt.Brand = shirt.Brand;
-            existingShirt.Color = shirt.Color;
-            existingShirt.Size = shirt.Size;
-            existingShirt.Gender = shirt.Gender;
+            shirtToUpdate.Brand = shirt.Brand;
+            shirtToUpdate.Color = shirt.Color;
+            shirtToUpdate.Size = shirt.Size;
+            shirtToUpdate.Gender = shirt.Gender;
         }
 
         public static void DeleteShirt(int ShirtId)
