@@ -1,17 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using WebApp.Data;
+using WebApp.Models.Repositories;
 
-namespace WebApp.Filters.ActionFilters
+namespace WebApp.Filters
 {
     public class Shirt_ValidateShirtIdFilterAttribute : ActionFilterAttribute
     {
-        private readonly ApplicationDBContext db;
-
-        public Shirt_ValidateShirtIdFilterAttribute(ApplicationDBContext db)
-        {
-            this.db = db;
-        }
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
@@ -33,27 +27,18 @@ namespace WebApp.Filters.ActionFilters
 
                     context.Result = new BadRequestObjectResult(problemDetails);
                 }
-                else
+                else if (!ShirtRepository.ShirtExists(shirtId.Value))
                 {
-                    var shirt = db.Shirts.Find(shirtId.Value);
-
-                    if (shirt == null)
+                    var problemDetails = new ProblemDetails()
                     {
-                        var problemDetails = new ProblemDetails()
-                        {
-                            Title = "Shirt Not Found",
-                            Detail = $"No shirt found with id {shirtId.Value}.",
-                            Status = StatusCodes.Status404NotFound
-                        };
+                        Title = "Shirt Not Found",
+                        Detail = $"No shirt found with id {shirtId.Value}.",
+                        Status = StatusCodes.Status404NotFound
+                    };
+                    
+                    context.ModelState.AddModelError("shirtId", problemDetails.Detail);
 
-                        context.ModelState.AddModelError("shirtId", problemDetails.Detail);
-
-                        context.Result = new NotFoundObjectResult(problemDetails);
-                    }
-                    else
-                    {
-                        context.HttpContext.Items["shirt"] = shirt;
-                    }
+                    context.Result = new NotFoundObjectResult(problemDetails);
                 }
             }
         }

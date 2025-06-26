@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace WebApp.Models.Repositories
+﻿namespace WebApp.Models.Repositories
 {
     public static class ShirtRepository
     {
@@ -26,51 +24,5 @@ namespace WebApp.Models.Repositories
             return shirts;
         }
 
-        public static Shirt? GetShirtByProperties(string? brand, string? color, int size, string? gender)
-        {
-            return shirts.FirstOrDefault(s =>
-                !string.IsNullOrEmpty(brand) &&
-                !string.IsNullOrEmpty(s.Brand) &&
-                s.Brand.Equals(brand, StringComparison.OrdinalIgnoreCase) &&
-
-                !string.IsNullOrEmpty(color) &&
-                !string.IsNullOrEmpty(s.Color) &&
-                s.Color.Equals(color, StringComparison.OrdinalIgnoreCase) &&
-
-                !string.IsNullOrEmpty(gender) &&
-                !string.IsNullOrEmpty(s.Gender) &&
-                s.Gender.Equals(gender, StringComparison.OrdinalIgnoreCase) &&
-
-                size == s.Size
-            );
-        }
-        public static void AddShirt(Shirt shirt)
-        {
-            int maxId = shirts.Max(s => s.ShirtId);
-
-            shirt.ShirtId = ++maxId;
-
-            shirts.Add(shirt);
-        }
-
-        public static void UpdateShirt(Shirt shirt)
-        {
-            var shirtToUpdate = shirts.First(s => s.ShirtId == shirt.ShirtId);
-
-            shirtToUpdate.Brand = shirt.Brand;
-            shirtToUpdate.Color = shirt.Color;
-            shirtToUpdate.Size = shirt.Size;
-            shirtToUpdate.Gender = shirt.Gender;
-        }
-
-        public static void DeleteShirt(int ShirtId)
-        {
-            var shirt = GetShirtById(ShirtId);
-
-            if (shirt != null)
-            {
-                shirts.Remove(shirt);
-            }
-        }
     }
 }
