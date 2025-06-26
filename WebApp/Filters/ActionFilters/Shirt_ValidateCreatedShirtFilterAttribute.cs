@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using WebApp.Data;
 using WebApp.Models;
 using WebApp.Models.Repositories;
 
@@ -7,6 +8,12 @@ namespace WebApp.Filters.ActionFilters
 {
     public class Shirt_ValidateCreatedShirtFilterAttribute : ActionFilterAttribute
     {
+        private readonly ApplicationDBContext db;
+
+        public Shirt_ValidateCreatedShirtFilterAttribute(ApplicationDBContext db)
+        {
+            this.db = db;
+        }
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             base.OnActionExecuting(context);
@@ -26,18 +33,39 @@ namespace WebApp.Filters.ActionFilters
 
                 context.Result = new BadRequestObjectResult(problemDetails);
             }
-            else if ( ShirtRepository.GetShirtByProperties(shirt.Brand ,shirt.Color, shirt.Size, shirt.Gender) != null)
+            else
             {
-               var problemDetails = new ProblemDetails()
+               var existingShirt = db.Shirts.FirstOrDefault(s =>
+                    !string.IsNullOrEmpty(shirt.Brand) &&
+                    !string.IsNullOrEmpty(s.Brand) &&
+                    s.Brand.ToLower() == shirt.Brand.ToLower() &&
+
+                    !string.IsNullOrEmpty(shirt.Color) &&
+                    !string.IsNullOrEmpty(s.Color) &&
+                    s.Color.ToLower() == shirt.Color.ToLower() &&
+
+                    !string.IsNullOrEmpty(shirt.Gender) &&
+                    !string.IsNullOrEmpty(s.Gender) &&
+                    s.Gender.ToLower() == shirt.Gender.ToLower() &&
+
+                    shirt.Size == s.Size &&
+
+                    shirt.Price == s.Price
+               );
+
+                if (existingShirt != null)
                 {
-                    Title = "Shirt Already Exists",
-                    Detail = "A shirt with the same properties already exists.",
-                    Status = StatusCodes.Status400BadRequest
-                };
+                    var problemDetails = new ProblemDetails()
+                    {
+                        Title = "Shirt Already Exists",
+                        Detail = "A shirt with the same properties already exists.",
+                        Status = StatusCodes.Status400BadRequest
+                    };
 
-                context.ModelState.AddModelError("shirt", problemDetails.Detail);
+                    context.ModelState.AddModelError("shirt", problemDetails.Detail);
 
-                context.Result = new BadRequestObjectResult(problemDetails);
+                    context.Result = new BadRequestObjectResult(problemDetails);
+                }
             }
         }
     }

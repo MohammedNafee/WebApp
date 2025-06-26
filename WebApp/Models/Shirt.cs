@@ -18,6 +18,8 @@ namespace WebApp.Models
 
         [Required]
         public string? Gender { get; set; }
-        
+
+        public double? Price { get; set; }
+
     }
 }
