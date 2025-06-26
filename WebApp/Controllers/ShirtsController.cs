@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebApp.Filters;
+using WebApp.Filters.ActionFilters;
+using WebApp.Filters.ExceptionFilters;
 using WebApp.Models;
 using WebApp.Models.Repositories;
 
@@ -24,34 +25,34 @@ namespace WebApp.Controllers
         }
 
         [HttpPost]
+        [Shirt_ValidateCreatedShirtFilter]
         public IActionResult CreateShirt([FromBody] Shirt shirt)
         {
-            return Ok("Creating a new shirt with id: {shirt.ShirtId}, Brand: {shirt.Brand} ");
+            ShirtRepository.AddShirt(shirt);
+
+            return Created();
         } 
         
         [HttpPut("{id}")]
+        [Shirt_HandleUpdateExceptionsFilter]
+        [Shirt_ValidateUpdateShirtFilter]
         [Shirt_ValidateShirtIdFilter]
-        public IActionResult UpdateShirt(int id, [FromQuery] string Color)
+        public IActionResult UpdateShirt(int id, [FromBody] Shirt shirt)
         {
-
-            if (String.IsNullOrWhiteSpace(Color))
-                return BadRequest("Color cannot be null or empty.");
-
-            var shirt = ShirtRepository.GetShirtById(id);   
-
-            if (shirt != null)
-            {
-                shirt.Color = Color;
-                return Ok($"Updating shirt with id: {id}, New Color: {shirt.Color}");
-            }
-            
-            return BadRequest("Shirt not found.");
+            ShirtRepository.UpdateShirt(shirt);
+  
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
+        [Shirt_ValidateShirtIdFilter]
         public IActionResult DeleteShirt(int id)
         {
-            return Ok("Deleting shirt with id: {id}");
+            var existingShirt = ShirtRepository.GetShirtById(id);
+
+            ShirtRepository.DeleteShirt(id);
+
+            return Ok(existingShirt);
         }
 
     }
