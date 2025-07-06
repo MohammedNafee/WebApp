@@ -9,16 +9,12 @@
                 ApplicationId = 1, 
                 ApplicationName = "MVCWebApp", 
                 ClientId = "123", 
-                ClientSecret = "12345"
+                ClientSecret = "12345",
+                Scopes = "read,write"
             }
         };
 
-        public static bool Authenticate(string clientId,  string clientSecret)
-        {
-            return _applications.Any(app => app.ClientId == clientId && app.ClientSecret == clientSecret);
-        }
-
-        public static Application? ApplicationByClientId(string clientId)
+        public static Application? GetApplicationByClientId(string clientId)
         {
             return _applications.FirstOrDefault(app => app.ClientId == clientId);
         }
