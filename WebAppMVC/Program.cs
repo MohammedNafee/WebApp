@@ -9,6 +9,12 @@ builder.Services.AddHttpClient("ShirtsApi",client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddHttpClient("AuthorityApi", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5069/");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
 builder.Services.AddTransient<IWebApiExecutor, WebApiExecutor>();
 
 builder.Services.AddControllersWithViews();

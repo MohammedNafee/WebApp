@@ -1,21 +1,31 @@
 ﻿
 
+using Newtonsoft.Json;
+using System.Net.Http.Headers;
+
 namespace WebAppMVC.Data
 {
     public class WebApiExecutor : IWebApiExecutor
     {
         private const string apiName = "ShirtsApi";
-        private readonly IHttpClientFactory httpClientFactory;
+        private const string authApiName = "AuthorityApi";
 
-        public WebApiExecutor(IHttpClientFactory httpClientFactory)
+        private readonly IHttpClientFactory httpClientFactory;
+        private readonly IConfiguration configuration;
+
+        public WebApiExecutor(
+            IHttpClientFactory httpClientFactory,
+            IConfiguration configuration)
         {
             this.httpClientFactory = httpClientFactory;
+            this.configuration = configuration;
         }
 
         public async Task<T?> InvokeGet<T>(string relativeUrl)
         {
             var httpClient = httpClientFactory.CreateClient(apiName);
-            
+            await AddJwtToHeader(httpClient);
+
             //return await httpClient.GetFromJsonAsync<T>(relativeUrl);
             var request = new HttpRequestMessage(HttpMethod.Get, relativeUrl);
             var response = await httpClient.SendAsync(request);
@@ -27,6 +37,7 @@ namespace WebAppMVC.Data
         public async Task InvokePost<T>(string relativeUrl, T obj)
         {
             var httpClient = httpClientFactory.CreateClient(apiName);
+            await AddJwtToHeader(httpClient);
 
             var response = await httpClient.PostAsJsonAsync(relativeUrl, obj);
 
@@ -38,6 +49,7 @@ namespace WebAppMVC.Data
         public async Task InvokePut<T>(string relativeUrl, T obj)
         {
             var httpClient = httpClientFactory.CreateClient(apiName);
+            await AddJwtToHeader(httpClient);
 
             var response = await httpClient.PutAsJsonAsync(relativeUrl, obj);
 
@@ -47,6 +59,7 @@ namespace WebAppMVC.Data
         public async Task InvokeDelete(string relativeUrl)
         {
             var httpClient = httpClientFactory.CreateClient(apiName);
+            await AddJwtToHeader(httpClient);
 
             var response = await httpClient.DeleteAsync(relativeUrl);
 
@@ -61,6 +74,40 @@ namespace WebAppMVC.Data
 
                 throw new WebApiException(errorJson);
             }
+        }
+
+        private async Task AddJwtToHeader(HttpClient httpClient)
+        {
+            // 1. Authenticate against the Authority API to get a JWT token
+            // For Authontication, we will use the AppCredential class
+            // which contains ClientId and ClientSecret to authenticate against the Authority API
+
+            var clientId = configuration.GetValue<string>("ClientId");
+            var clientSecret = configuration.GetValue<string>("ClientSecret");
+
+            // We will use the IHttpClientFactory to create a client to communicate with the Authority API
+            var authoClient = httpClientFactory.CreateClient(authApiName);
+
+            // Post the AppCredential to the Authority API to get a JWT token
+            var response = await authoClient.PostAsJsonAsync("auth", new AppCredential
+            {
+                ClientId = clientId,
+                ClientSecret = clientSecret
+            });
+
+            response.EnsureSuccessStatusCode();
+
+            // 2. Get the JWT token from the authority API response
+            // For getting the JWT token, we will need a classs that represents the structure of the JWT token
+            // Then we can deserialize the response to that class
+
+            string strToken = await response.Content.ReadAsStringAsync();
+            var jwtToken = JsonConvert.DeserializeObject<JwtToken>(strToken);
+
+            // 3. Pass the JWT token to endpoints through the http headers
+            httpClient.DefaultRequestHeaders.Authorization = 
+                new AuthenticationHeaderValue("Bearer", jwtToken?.AccessToken);
+
         }
 
     }
