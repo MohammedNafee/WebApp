@@ -1,6 +1,5 @@
 ﻿using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace WebAPIApp.Authority
 {
@@ -51,6 +50,52 @@ namespace WebAPIApp.Authority
             var tokenHandler = new JsonWebTokenHandler();
 
             return tokenHandler.CreateToken(tokenDescriptor);
+        }
+
+        public static async Task<bool> VerifyTokenAsync(string token, string secretKey)
+        {
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(secretKey))
+                return false;
+
+            var keyBytes = System.Text.Encoding.UTF8.GetBytes(secretKey);
+            var tokenHandler = new JsonWebTokenHandler();
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero // No clock skew
+            };
+
+            try
+            {
+                var result = await tokenHandler.ValidateTokenAsync(token, validationParameters);
+                return result.IsValid;
+
+            }
+            catch (SecurityTokenMalformedException)
+            {
+                // Token is malformed
+                return false;
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                // Token has expired
+                return false;
+            }
+            catch (SecurityTokenInvalidSignatureException)
+            {
+                // Token signature is invalid
+                return false;
+            }
+            catch (Exception)
+            {
+                // Other exceptions
+                throw;
+            }
         }
     }
 }

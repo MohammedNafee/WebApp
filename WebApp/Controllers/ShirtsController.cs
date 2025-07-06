@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebAPIApp.Filters.AuthFilters;
 using WebApp.Data;
 using WebApp.Filters.ActionFilters;
 using WebApp.Filters.ExceptionFilters;
@@ -8,6 +9,7 @@ namespace WebApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [JwtTokenAuthFilter] // This filter will be applied to all actions in this controller 
     public class ShirtsController : ControllerBase
     {
         private readonly ApplicationDBContext db;
