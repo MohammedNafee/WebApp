@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using WebAppMVC.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,16 @@ builder.Services.AddHttpClient("AuthorityApi", client =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 
+builder.Services.AddSession(options =>
+// Configure session options
+{
+    options.IdleTimeout = TimeSpan.FromHours(5); // Set session timeout to 5 hours
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true; // Make the session cookie essential
+});
+
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddTransient<IWebApiExecutor, WebApiExecutor>();
 
 builder.Services.AddControllersWithViews();
@@ -31,6 +42,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+app.UseSession();
 
 app.MapControllerRoute(
     name: "default",
