@@ -1,5 +1,6 @@
 ﻿namespace WebAPIApp.Authority
 {
+    // This class represents an application in the authority system.
     public class Application
     {
         public int ApplicationId { get; set; }

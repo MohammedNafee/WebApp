@@ -1,7 +1,10 @@
 ﻿namespace WebAPIApp.Authority
 {
+    // This class simulates a repository for applications.
+    // In a real-world application, this would likely connect to a database or an external service.
     public static class AppRepository
     {
+        // Simulated in-memory storage for applications
         private static List<Application> _applications = new List<Application>()
         {
             new Application

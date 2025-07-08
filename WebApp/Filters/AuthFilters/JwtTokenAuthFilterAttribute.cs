@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using WebAPIApp.Attributes;
 using WebAPIApp.Authority;
 
 namespace WebAPIApp.Filters.AuthFilters
@@ -32,17 +33,29 @@ namespace WebAPIApp.Filters.AuthFilters
             var configuration = context.HttpContext.RequestServices.GetService<IConfiguration>();
             var secretKey = configuration?["SecurityKey"]??string.Empty;
 
-            // 4. Verify the token
-            if (await Authenticator.VerifyTokenAsync(tokenString, secretKey))
+            // 4. Verify the token and extract claims
+
+            var claims = await Authenticator.VerifyTokenAsync(tokenString, secretKey);
+            
+            if (claims == null)
             {
-                return;
+                context.Result = new UnauthorizedResult(); // 401 Unauthorized
             }
             else
             {
-                context.Result = new UnauthorizedResult();
-                return;
-            }
+                // get the claims required for authorization
+                var requiredClaims = context.ActionDescriptor.EndpointMetadata
+                    .OfType<RequiredClaimAttribute>()
+                    .ToList();
 
+                // 403
+                if (requiredClaims != null && !requiredClaims.All(rc => claims.Any(c => 
+                    c.Type.ToLower() == rc.ClaimType.ToLower() &&
+                    c.Value.ToLower() == rc.ClaimValue.ToLower())))
+                {
+                    context.Result = new StatusCodeResult(403); // 403 Forbidden
+                }
+            }
         }
     }
 }
