@@ -19,7 +19,7 @@ namespace WebAPIApp.Controllers
             // Validate client credentials against the registered apps in the repository.
             if (Authenticator.Authenticate(credential.ClientId, credential.ClientSecret))
             {
-                var expiresAt = DateTime.UtcNow.AddMinutes(10); // Token is valid for 10 minutes
+                var expiresAt = DateTime.UtcNow.AddMinutes(1); // Token is valid for 1 minute
                 // If valid, generate an access token and return it with expiration info.
                 return Ok(new
                 {

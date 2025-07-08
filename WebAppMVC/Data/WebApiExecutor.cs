@@ -91,7 +91,8 @@ namespace WebAppMVC.Data
                 jwtToken = JsonConvert.DeserializeObject<JwtToken>(strToken);
             }
 
-            if (string.IsNullOrWhiteSpace(strToken))
+            if (jwtToken == null ||
+                jwtToken.ExpiresAt <= DateTime.UtcNow)
             {
                 // 1. Authenticate against the Authority API to get a JWT token
                 // For Authontication, we will use the AppCredential class
