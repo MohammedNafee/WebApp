@@ -7,10 +7,10 @@ using WebApp.Filters.ActionFilters;
 using WebApp.Filters.ExceptionFilters;
 using WebApp.Models;
 
-namespace WebApp.Controllers
+namespace WebApp.Controllers.V2
 {
-    [ApiVersion("1.0")]
-    [ApiExplorerSettings(GroupName = "v1")]
+    [ApiVersion("2.0")]
+    [ApiExplorerSettings(GroupName = "v2")]
     [ApiController]
     [Route("api/[controller]")]
     //[JwtTokenAuthFilter] // This filter will be applied to all actions in this controller 
@@ -27,7 +27,7 @@ namespace WebApp.Controllers
         [RequiredClaim("read", "true")]
         public IActionResult GetShirts()
         {
-            Console.WriteLine("V1: GetShirts called");
+            Console.WriteLine("V2: GetShirts called");
             return Ok(db.Shirts.ToList());
         }
 
